@@ -3,6 +3,7 @@ import Enzyme, { shallow } from "enzyme";
 import React from "react";
 import CheckboxWithLabel from "../CheckboxWithLabel";
 
+// DOM Testing
 Enzyme.configure({ adapter: new Adapter() });
 test("CheckboxWithLabel changes the text after click", () => {
     // Render a checkbox with label in the document

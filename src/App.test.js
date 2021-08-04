@@ -1,29 +1,42 @@
-import Adapter from "@wojtekmaj/enzyme-adapter-react-17";
-import Enzyme, { shallow } from "enzyme";
+import { act, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import axios from "axios";
 import React from "react";
 import App from "./App";
 
-// test("renders learn react link", () => {
-//     render(<App />);
-//     const linkElement = screen.getByText(/learn react/i);
-//     expect(linkElement).toBeInTheDocument();
-// });
+jest.mock("axios");
 
-Enzyme.configure({ adapter: new Adapter() });
+// https://www.robinwieruch.de/react-testing-library
+describe("App", () => {
+    test("fetches stories from an API and displays them", async () => {
+        // Given
+        const stories = [
+            { objectID: "1", title: "Hello" },
+            { objectID: "2", title: "React" },
+        ];
 
-test("renders learn react link", () => {
-    const app = shallow(<App />);
-    expect(app.find("a").text()).toEqual("Learn React");
-    // expect(wrapper.find('svg')).toBeDefined()
+        const promise = Promise.resolve({ data: { hits: stories } });
 
-    //  expect(checkbox.text()).toEqual("Off");
-    // test("CheckboxWithLabel changes the text after click", () => {
-    //     // Render a checkbox with label in the document
-    //     const checkbox = shallow(<CheckboxWithLabel labelOn="On" labelOff="Off" />);
+        axios.get.mockImplementationOnce(() => promise);
 
-    //     expect(checkbox.text()).toEqual("Off");
+        // When
+        render(<App />);
+        await userEvent.click(screen.getByRole("button"));
+        await act(() => promise);
 
-    //     checkbox.find("input").simulate("change");
+        // Then
+        expect(screen.getAllByRole("listitem")).toHaveLength(2);
+    });
 
-    //     expect(checkbox.text()).toEqual("On");
+    test("fetches stories from an API and fails", async () => {
+        axios.get.mockImplementationOnce(() => Promise.reject(new Error()));
+
+        render(<App />);
+
+        await userEvent.click(screen.getByRole("button"));
+
+        const message = await screen.findByText(/Something went wrong/);
+
+        expect(message).toBeInTheDocument();
+    });
 });
